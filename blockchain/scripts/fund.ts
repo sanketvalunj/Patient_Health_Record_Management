@@ -1,41 +1,66 @@
-import { ethers } from "hardhat"
+import { ethers } from "hardhat";
+import mongoose from "mongoose";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 async function main() {
-  // 1. OPEN MONGODB COMPASS
-  // 2. COPY YOUR PATIENT'S BLOCKCHAIN ADDRESS HERE:
-  const patientAddress = "0x9b5a2641eaa12826e112e6de255c247c68e022a2"
-  
-  // 3. COPY YOUR DOCTOR'S BLOCKCHAIN ADDRESS HERE:
-  const doctorAddress = "0x182d67ca6e1eda7fc3e879117e1e70627b4a5bd5"
+  console.log("\n--- Hardhat Final Funding Script ---");
 
-  // 4. COPY YOUR LAB'S BLOCKCHAIN ADDRESS HERE:
-  const labAddress = "0x5aaebabff3ac7a1bfdacaaaea8ff2f3134327b25"
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) throw new Error("MONGODB_URI missing in .env");
 
-  const [deployer] = await ethers.getSigners()
+  try {
+    // 1. Connect to the correct database
+    await mongoose.connect(MONGODB_URI, { dbName: 'ehr-platform' });
+    const db = mongoose.connection.db;
+    if (!db) throw new Error("DB Connection failed");
+    console.log(`✅ Connected to DB: ${mongoose.connection.name}`);
 
-  console.log("\n--- Local ETH funding script ---")
-  console.log(`Deployer (Bank): ${deployer.address}\n`)
+    // 2. Fetch all users
+    const collection = db.collection('users');
+    const allUsers = await collection.find({}).toArray();
+    console.log(`Total users found: ${allUsers.length}`);
 
-  // Fund Patient
-  if (patientAddress.startsWith("0x") && patientAddress.length === 42) {
-    await deployer.sendTransaction({ to: patientAddress, value: ethers.parseEther("10.0") })
-    console.log(`✅ Sent 10 ETH to Patient: ${patientAddress}`)
-  }
+    // 3. Get the "Bank" (The first Hardhat account with 10,000 ETH)
+    const [deployer] = await ethers.getSigners();
+    console.log(`Bank Account (Sender): ${deployer.address}`);
 
-  // Fund Doctor
-  if (doctorAddress.startsWith("0x") && doctorAddress.length === 42) {
-    await deployer.sendTransaction({ to: doctorAddress, value: ethers.parseEther("10.0") })
-    console.log(`✅ Sent 10 ETH to Doctor: ${doctorAddress}`)
-  }
+    const bankBalance = await ethers.provider.getBalance(deployer.address);
+    console.log(`Bank Balance: ${ethers.formatEther(bankBalance)} ETH\n`);
 
-  // Fund Lab
-  if (labAddress.startsWith("0x") && labAddress.length === 42) {
-    await deployer.sendTransaction({ to: labAddress, value: ethers.parseEther("10.0") })
-    console.log(`✅ Sent 10 ETH to Lab: ${labAddress}`)
+    // 4. The Funding Loop
+    for (const user of allUsers) {
+      if (user.role === 'admin') continue;
+
+      // Targeting your specific 'blockchainAddress' field
+      const targetAddress = user.blockchainAddress;
+
+      if (targetAddress && targetAddress.startsWith("0x")) {
+        console.log(`💰 Funding ${user.role} (${user.name}): ${targetAddress}`);
+
+        try {
+          const tx = await deployer.sendTransaction({
+            to: targetAddress,
+            value: ethers.parseEther("10.0"), // Sending 10 ETH
+          });
+
+          await tx.wait(); // Wait for confirmation
+          console.log(`   ✅ Success! Hash: ${tx.hash}`);
+        } catch (err) {
+          console.error(`   ❌ Transaction failed for ${targetAddress}:`, err);
+        }
+      } else {
+        console.log(`   ⏭️ Skipping ${user.name || user.email}: No blockchainAddress found.`);
+      }
+    }
+
+  } catch (error) {
+    console.error("❌ Critical Error:", error);
+  } finally {
+    await mongoose.disconnect();
+    console.log("\n--- Funding Operation Finished ---");
   }
 }
 
-main().catch((error) => {
-  console.error(error)
-  process.exitCode = 1
-})
+main().catch(console.error);
