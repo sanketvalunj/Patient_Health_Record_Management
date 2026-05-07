@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FileText, Users, History, LogOut, Eye, Loader2, Activity, ShieldCheck, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { UploadDialog } from "@/components/patient/upload-dialog"
 import { formatIdentifier } from "@/lib/utils/format"
 import { unwrapAESKey, decryptFile } from "@/lib/crypto"
@@ -223,22 +223,35 @@ export default function PatientDashboard() {
     .filter(d => d.sugar || d.weight)
     .reverse()
 
+  const defaultMockData = [
+    { date: "Oct 1", sugar: 110, weight: 75.2 },
+    { date: "Oct 5", sugar: 105, weight: 74.8 },
+    { date: "Oct 10", sugar: 98, weight: 74.5 },
+    { date: "Oct 15", sugar: 95, weight: 74.1 },
+    { date: "Oct 20", sugar: 92, weight: 73.8 },
+    { date: "Oct 25", sugar: 89, weight: 73.5 },
+    { date: "Oct 30", sugar: 88, weight: 73.2 },
+  ]
+
+  const finalGraphData = graphData.length > 0 ? graphData : defaultMockData
+
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b bg-card shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-50 text-foreground">
+      <header className="bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-600 text-white shadow-md sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
-              <ShieldCheck className="h-6 w-6 text-primary" />
+            <div className="h-10 w-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center ring-1 ring-white/30">
+              <ShieldCheck className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold leading-none">Health Record Portal</h1>
-              <p className="text-xs text-muted-foreground mt-1">
-                Owner: <span className="font-medium text-foreground">{formatIdentifier(user?.userId, user?.name, "patient")}</span>
+              <h1 className="text-xl font-bold leading-none tracking-tight">Health Record Portal</h1>
+              <p className="text-xs text-blue-100 mt-1">
+                Owner: <span className="font-semibold text-white">{formatIdentifier(user?.userId, user?.name, "patient")}</span>
               </p>
             </div>
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" onClick={handleLogout} className="gap-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-full px-5 transition-colors">
             <LogOut className="h-4 w-4" />
             Logout
           </Button>
@@ -246,29 +259,36 @@ export default function PatientDashboard() {
       </header>
 
       <main className="container mx-auto px-6 py-8 space-y-8">
-        <div className="flex flex-wrap gap-4">
-          <UploadDialog onUploadSuccess={loadAllData} />
-          <GrantAccessDialog onGrantSuccess={loadAllData} />
+        {/* Welcome Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name?.split(' ')[0] || "Patient"}! 👋</h2>
+            <p className="text-slate-500 mt-1">Here is an overview of your medical journey and health records.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <UploadDialog onUploadSuccess={loadAllData} />
+            <GrantAccessDialog onGrantSuccess={loadAllData} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <Tabs defaultValue="records" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-xl">
-            <TabsTrigger value="records" className="gap-2 rounded-lg">
-              <FileText className="h-4 w-4" /> My Records
-            </TabsTrigger>
-            <TabsTrigger value="access" className="gap-2 rounded-lg">
-              <Users className="h-4 w-4" /> Permissions
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2 rounded-lg">
-              <History className="h-4 w-4" /> Audit Logs
-            </TabsTrigger>
-            <TabsTrigger value="trends" className="gap-2 rounded-lg">
+            <Tabs defaultValue="trends" className="space-y-6">
+          <TabsList className="bg-white p-1.5 rounded-xl border shadow-sm w-full md:w-auto overflow-x-auto flex-nowrap hide-scrollbar">
+            <TabsTrigger value="trends" className="gap-2 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm">
               <Activity className="h-4 w-4" /> Health Trends
             </TabsTrigger>
-            <TabsTrigger value="followups" className="gap-2 rounded-lg">
+            <TabsTrigger value="records" className="gap-2 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm">
+              <FileText className="h-4 w-4" /> My Records
+            </TabsTrigger>
+            <TabsTrigger value="followups" className="gap-2 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm">
               <MessageCircle className="h-4 w-4" /> Clinical Follow-ups
+            </TabsTrigger>
+            <TabsTrigger value="access" className="gap-2 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm">
+              <Users className="h-4 w-4" /> Permissions
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-2 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm">
+              <History className="h-4 w-4" /> Audit Logs
             </TabsTrigger>
           </TabsList>
 
@@ -387,42 +407,58 @@ export default function PatientDashboard() {
           </TabsContent>
 
           <TabsContent value="trends">
-            <Card className="border-none shadow-sm ring-1 ring-border">
-              <CardHeader>
-                <CardTitle>Biometric Trends</CardTitle>
-                <CardDescription>Extracted from your medical reports</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[400px]">
-                {graphData.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-muted-foreground">
-                    No longitudinal data available.
+            <Card className="border-none shadow-sm ring-1 ring-border bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-xl">Biometric Trends</CardTitle>
+                    <CardDescription>Extracted from your medical reports</CardDescription>
                   </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={graphData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                      <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={12} />
-                      <YAxis stroke="var(--muted-foreground)" fontSize={12} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: "8px" }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="sugar" 
-                        stroke="var(--destructive)" 
-                        strokeWidth={2}
-                        name="Sugar"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="weight" 
-                        stroke="var(--primary)" 
-                        strokeWidth={2}
-                        name="Weight"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
+                  {graphData.length === 0 && (
+                     <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">Demo Data</Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="h-[400px] p-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={finalGraphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorSugar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                      itemStyle={{ fontWeight: 600 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="sugar" 
+                      stroke="#ef4444" 
+                      fillOpacity={1} 
+                      fill="url(#colorSugar)" 
+                      strokeWidth={3}
+                      name="Fasting Sugar (mg/dL)"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="#3b82f6" 
+                      fillOpacity={1} 
+                      fill="url(#colorWeight)" 
+                      strokeWidth={3}
+                      name="Weight (kg)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </TabsContent>
