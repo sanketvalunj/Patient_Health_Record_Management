@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                           {log.action.replace("_", " ")}
                         </Badge>
                         <span className="text-slate-700">
-                          {log.performedByUser?.name || "System"} [{log.performedByRole.toUpperCase()}]
+                          {log.performedByUser?.name || "System"} [{(log.performedByRole || "system").toUpperCase()}]
                         </span>
                       </div>
                       <span className="opacity-40">{new Date(log.timestamp).toLocaleString()}</span>
