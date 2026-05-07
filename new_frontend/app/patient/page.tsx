@@ -219,18 +219,20 @@ export default function PatientDashboard() {
       date: new Date(r.uploadDate).toLocaleDateString(),
       sugar: r.summary?.vitals?.sugarLevel || null,
       weight: r.summary?.vitals?.weight || null,
+      heartRate: r.summary?.vitals?.heartRate || null,
+      systolic: r.summary?.vitals?.bloodPressure?.split('/')[0] || r.summary?.vitals?.systolic || null,
     }))
-    .filter(d => d.sugar || d.weight)
+    .filter(d => d.sugar || d.weight || d.heartRate || d.systolic)
     .reverse()
 
   const defaultMockData = [
-    { date: "Oct 1", sugar: 110, weight: 75.2 },
-    { date: "Oct 5", sugar: 105, weight: 74.8 },
-    { date: "Oct 10", sugar: 98, weight: 74.5 },
-    { date: "Oct 15", sugar: 95, weight: 74.1 },
-    { date: "Oct 20", sugar: 92, weight: 73.8 },
-    { date: "Oct 25", sugar: 89, weight: 73.5 },
-    { date: "Oct 30", sugar: 88, weight: 73.2 },
+    { date: "Oct 1", sugar: 110, weight: 75.2, heartRate: 72, systolic: 118 },
+    { date: "Oct 5", sugar: 105, weight: 74.8, heartRate: 74, systolic: 120 },
+    { date: "Oct 10", sugar: 98, weight: 74.5, heartRate: 71, systolic: 119 },
+    { date: "Oct 15", sugar: 95, weight: 74.1, heartRate: 75, systolic: 122 },
+    { date: "Oct 20", sugar: 92, weight: 73.8, heartRate: 73, systolic: 118 },
+    { date: "Oct 25", sugar: 89, weight: 73.5, heartRate: 70, systolic: 117 },
+    { date: "Oct 30", sugar: 88, weight: 73.2, heartRate: 72, systolic: 118 },
   ]
 
   const finalGraphData = graphData.length > 0 ? graphData : defaultMockData
@@ -419,46 +421,102 @@ export default function PatientDashboard() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="h-[400px] p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={finalGraphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorSugar" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                      itemStyle={{ fontWeight: 600 }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="sugar" 
-                      stroke="#ef4444" 
-                      fillOpacity={1} 
-                      fill="url(#colorSugar)" 
-                      strokeWidth={3}
-                      name="Fasting Sugar (mg/dL)"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="#3b82f6" 
-                      fillOpacity={1} 
-                      fill="url(#colorWeight)" 
-                      strokeWidth={3}
-                      name="Weight (kg)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-rose-500" /> Metabolism (Sugar & Weight)
+                    </h3>
+                    <div className="h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={finalGraphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorSugar" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                          <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
+                          <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dx={-10} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                            itemStyle={{ fontWeight: 600 }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="sugar" 
+                            stroke="#ef4444" 
+                            fillOpacity={1} 
+                            fill="url(#colorSugar)" 
+                            strokeWidth={3}
+                            name="Sugar (mg/dL)"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="weight" 
+                            stroke="#3b82f6" 
+                            fillOpacity={1} 
+                            fill="url(#colorWeight)" 
+                            strokeWidth={3}
+                            name="Weight (kg)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-indigo-500" /> Cardiovascular (Heart Rate & BP)
+                    </h3>
+                    <div className="h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={finalGraphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorHR" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorBP" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                          <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
+                          <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dx={-10} domain={['dataMin - 10', 'dataMax + 10']} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                            itemStyle={{ fontWeight: 600 }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="heartRate" 
+                            stroke="#8b5cf6" 
+                            fillOpacity={1} 
+                            fill="url(#colorHR)" 
+                            strokeWidth={3}
+                            name="Heart Rate (bpm)"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="systolic" 
+                            stroke="#10b981" 
+                            fillOpacity={1} 
+                            fill="url(#colorBP)" 
+                            strokeWidth={3}
+                            name="Systolic BP (mmHg)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
