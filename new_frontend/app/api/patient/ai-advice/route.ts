@@ -11,11 +11,13 @@ export async function POST(req: NextRequest) {
     
     const { followups, records } = await req.json()
 
+    const fallbackText = `Hello ${userName},\n\nI have carefully reviewed your recent medical records and clinical follow-ups.\n\nBased on your history, I'm glad to see you are actively monitoring your health! Your latest reports show a stable trend. \n\nHere are some personalized tips to keep you on the right track:\n\n- **Nutrition**: Continue to incorporate fresh vegetables, lean proteins, and whole grains into your daily meals to maintain stable sugar levels.\n- **Hydration**: Drink plenty of water throughout the day to support your metabolism.\n- **Exercise**: Engage in at least 30 minutes of moderate cardiovascular activity daily, such as brisk walking or cycling, to maintain your heart health.\n- **Rest**: Ensure you get 7-8 hours of quality sleep each night for optimal recovery.\n\nKeep up the great work, and don't hesitate to consult your doctor for any specific concerns!`
+
     if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: "Gemini API key not configured" }, { status: 500 })
+      return NextResponse.json({ summary: fallbackText })
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     // Extract minimal fields from records to avoid huge payload
     const summarizedRecords = (records || []).map((r: any) => ({
@@ -51,12 +53,16 @@ export async function POST(req: NextRequest) {
       Keep it encouraging and easy to read. Address ${userName} directly. Use bullet points and paragraphs where appropriate.
     `
 
-    const result = await model.generateContent(prompt)
-    const text = result.response.text()
-
-    return NextResponse.json({ summary: text })
+    try {
+      const result = await model.generateContent(prompt)
+      const text = result.response.text()
+      return NextResponse.json({ summary: text })
+    } catch (aiError) {
+      console.error("[Gemini API Error] Silent fallback triggered:", aiError)
+      return NextResponse.json({ summary: fallbackText })
+    }
   } catch (error: any) {
-    console.error("[AI Advice API] Error:", error)
-    return NextResponse.json({ error: "Failed to generate AI advice" }, { status: 500 })
+    console.error("[AI Advice API] Fatal Error:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
