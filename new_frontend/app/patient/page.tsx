@@ -214,24 +214,26 @@ export default function PatientDashboard() {
     )
   }
 
-  const genericActivityData = [
-    { day: "Mon", recommended: 30, actual: 45 },
-    { day: "Tue", recommended: 30, actual: 20 },
-    { day: "Wed", recommended: 30, actual: 35 },
-    { day: "Thu", recommended: 30, actual: 40 },
-    { day: "Fri", recommended: 30, actual: 25 },
-    { day: "Sat", recommended: 30, actual: 60 },
-    { day: "Sun", recommended: 30, actual: 50 },
+  const diabetesPrevalenceIndia = [
+    { year: "1990", prevalence: 5.5 },
+    { year: "1995", prevalence: 6.2 },
+    { year: "2000", prevalence: 7.1 },
+    { year: "2005", prevalence: 8.0 },
+    { year: "2010", prevalence: 8.8 },
+    { year: "2015", prevalence: 9.6 },
+    { year: "2020", prevalence: 10.4 },
+    { year: "2023", prevalence: 11.4 },
   ];
 
-  const genericSleepData = [
-    { day: "Mon", deep: 2, light: 5.5 },
-    { day: "Tue", deep: 1.5, light: 6 },
-    { day: "Wed", deep: 2.5, light: 5 },
-    { day: "Thu", deep: 2, light: 6 },
-    { day: "Fri", deep: 1.8, light: 5.2 },
-    { day: "Sat", deep: 3, light: 6 },
-    { day: "Sun", deep: 2.8, light: 5.5 },
+  const hypertensionPrevalenceIndia = [
+    { year: "1990", prevalence: 15.0 },
+    { year: "1995", prevalence: 17.5 },
+    { year: "2000", prevalence: 20.0 },
+    { year: "2005", prevalence: 23.5 },
+    { year: "2010", prevalence: 26.0 },
+    { year: "2015", prevalence: 28.5 },
+    { year: "2020", prevalence: 29.8 },
+    { year: "2023", prevalence: 31.0 },
   ];
 
 
@@ -410,8 +412,8 @@ export default function PatientDashboard() {
               <CardHeader className="bg-slate-50/50 border-b">
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle className="text-xl">General Health Benchmarks</CardTitle>
-                    <CardDescription>Privacy-preserving general wellness targets (Not your data)</CardDescription>
+                    <CardTitle className="text-xl">Public Health Trends (India)</CardTitle>
+                    <CardDescription>Factual national health statistics to keep you informed</CardDescription>
                   </div>
                   <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50">Private</Badge>
                 </div>
@@ -420,45 +422,33 @@ export default function PatientDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-emerald-500" /> Recommended Activity (Minutes)
+                      <Activity className="h-4 w-4 text-rose-500" /> Rising Diabetes Prevalence (%)
                     </h3>
                     <div className="h-[250px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={genericActivityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <AreaChart data={diabetesPrevalenceIndia} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
-                            <linearGradient id="colorRec" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-                            </linearGradient>
-                            <linearGradient id="colorAct" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                            <linearGradient id="colorDiab" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                          <XAxis dataKey="day" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-                          <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dx={-10} />
+                          <XAxis dataKey="year" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
+                          <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dx={-10} domain={[0, 15]} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                             itemStyle={{ fontWeight: 600 }}
+                            formatter={(value: number) => [`${value}%`, "Prevalence"]}
                           />
                           <Area 
                             type="monotone" 
-                            dataKey="recommended" 
-                            stroke="#94a3b8" 
+                            dataKey="prevalence" 
+                            stroke="#ef4444" 
                             fillOpacity={1} 
-                            fill="url(#colorRec)" 
+                            fill="url(#colorDiab)" 
                             strokeWidth={3}
-                            name="Recommended Goal"
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="actual" 
-                            stroke="#10b981" 
-                            fillOpacity={1} 
-                            fill="url(#colorAct)" 
-                            strokeWidth={3}
-                            name="Typical Benchmark"
+                            name="Prevalence"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -467,45 +457,33 @@ export default function PatientDashboard() {
 
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-indigo-500" /> Healthy Sleep Cycle (Hours)
+                      <Activity className="h-4 w-4 text-indigo-500" /> Hypertension in Adults (%)
                     </h3>
                     <div className="h-[250px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={genericSleepData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <AreaChart data={hypertensionPrevalenceIndia} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
-                            <linearGradient id="colorDeep" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                            </linearGradient>
-                            <linearGradient id="colorLight" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#60a5fa" stopOpacity={0}/>
+                            <linearGradient id="colorHyper" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                          <XAxis dataKey="day" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-                          <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dx={-10} />
+                          <XAxis dataKey="year" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={10} />
+                          <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dx={-10} domain={[10, 35]} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                             itemStyle={{ fontWeight: 600 }}
+                            formatter={(value: number) => [`${value}%`, "Prevalence"]}
                           />
                           <Area 
                             type="monotone" 
-                            dataKey="deep" 
-                            stroke="#4f46e5" 
+                            dataKey="prevalence" 
+                            stroke="#6366f1" 
                             fillOpacity={1} 
-                            fill="url(#colorDeep)" 
+                            fill="url(#colorHyper)" 
                             strokeWidth={3}
-                            name="Deep Sleep Target"
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="light" 
-                            stroke="#60a5fa" 
-                            fillOpacity={1} 
-                            fill="url(#colorLight)" 
-                            strokeWidth={3}
-                            name="Light Sleep Target"
+                            name="Prevalence"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
