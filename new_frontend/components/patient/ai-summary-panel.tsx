@@ -22,24 +22,27 @@ export function AISummaryPanel({ records = [] }: { records?: any[] }) {
         const followupsData = await followupsRes.json()
         const fList = followupsData.followups || []
         setFollowups(fList)
-        // Hardcoded AI summary for now
-        setTimeout(() => {
-          setSummary(`Here is a summary of your recent health journey:
+        // Then get AI summary
+        const res = await fetch("/api/patient/ai-advice", {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ followups: fList, records })
+        })
 
-• Your recent follow-ups indicate a stable recovery path.
-• Your uploaded reports show normal vitals with no major anomalies detected.
+        if (!res.ok) {
+          throw new Error("Failed to load AI advice")
+        }
 
-General Health Advice:
-• Ensure you eat plenty of fresh vegetables and fruits daily.
-• Maintain a routine of at least 30 minutes of proper exercise (like brisk walking or yoga).
-• Stay hydrated by drinking at least 8 glasses of water a day.
-• Ensure you get 7-8 hours of restful sleep every night.
-
-Keep up the good work and stay consistent with your health routine!`)
-          setLoading(false)
-        }, 1500)
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+          
+        setSummary(data.summary)
       } catch (err: any) {
         setError(err.message)
+      } finally {
         setLoading(false)
       }
     }
