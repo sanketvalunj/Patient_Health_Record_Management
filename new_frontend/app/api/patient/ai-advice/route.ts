@@ -6,7 +6,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
 
 export async function POST(req: NextRequest) {
   try {
-    await requireRole(req, ["patient"])
+    const user = await requireRole(req, ["patient"])
+    const userName = user.name || "Patient"
     
     const { followups, records } = await req.json()
 
@@ -28,26 +29,26 @@ export async function POST(req: NextRequest) {
     const hasData = (followups && followups.length > 0) || (summarizedRecords && summarizedRecords.length > 0);
 
     const prompt = hasData ? `
-      You are a caring medical assistant providing advice to a patient. 
-      Below is a list of clinical follow-ups and notes recorded by doctors for this patient:
+      You are a caring medical assistant providing advice to your patient, ${userName}. 
+      Below is a list of clinical follow-ups and notes recorded by doctors for ${userName}:
       ${JSON.stringify(followups || [])}
 
-      Below is a list of medical records and reports uploaded by the patient (including their descriptions and summaries):
+      Below is a list of medical records and reports uploaded by ${userName} (including their descriptions and summaries):
       ${JSON.stringify(summarizedRecords)}
       
       Based on these past followups, records, and descriptions, please provide:
-      1. A brief summary of their past followups, reports, and overall medical journey.
+      1. A brief, personalized summary of their past followups, reports, and overall medical journey.
       2. Regular, friendly, and practical health advice (e.g., eat fresh vegetables, exercise properly, stay hydrated) tailored to their history.
       
-      Keep it encouraging and easy to read. Use bullet points and paragraphs where appropriate.
+      Keep it encouraging and easy to read. Address ${userName} directly. Use bullet points and paragraphs where appropriate.
     ` : `
-      You are a caring medical assistant. The patient currently does not have any clinical follow-ups or uploaded medical records.
+      You are a caring medical assistant. Your patient, ${userName}, currently does not have any clinical follow-ups or uploaded medical records.
       
       Please provide:
-      1. A welcoming message acknowledging they are starting fresh.
+      1. A welcoming, personalized message acknowledging they are starting fresh.
       2. General health awareness and regular, friendly, practical health advice (e.g., eating fresh vegetables, maintaining proper exercise, staying hydrated, getting enough sleep).
       
-      Keep it encouraging and easy to read. Use bullet points and paragraphs where appropriate.
+      Keep it encouraging and easy to read. Address ${userName} directly. Use bullet points and paragraphs where appropriate.
     `
 
     const result = await model.generateContent(prompt)
